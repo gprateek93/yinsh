@@ -1,17 +1,10 @@
-/*
- * board.cpp
- *
- *  Created on: 10-Sep-2018
- *      Author: cmkmanwani
- */
-
 #include <iostream>
 #include <vector>
 #include <utility>
 #include "board.h"
 using namespace std;
 
-pair<int,int> hex_to_coord(int h,int p){
+pair<int,int> Board::hex_to_coord(int h,int p){
 	pair<int,int> coord;
 	int x,y;
 	if(p<=h){
@@ -42,7 +35,7 @@ pair<int,int> hex_to_coord(int h,int p){
 	return coord;
 }
 
-pair<int,int> coord_to_hex(int x, int y){
+pair<int,int> Board::coord_to_hex(int x, int y){
 	pair<int,int> hex;
 	int h,p;
 	if(x>=0&&y>=0){
@@ -77,6 +70,15 @@ pair<int,int> coord_to_hex(int x, int y){
 	return hex;
 }
 
+pair<int,int> Board::coord_to_index(pair<int,int> coord){
+	int x = coord.first +5;
+	int y = coord.second +5;
+	return make_pair(x,y);
+}
 
-
+pair<int,int> Board::index_to_coord(pair<int,int> index){
+	int x = index.first +5;
+	int y = index.second +5;
+	return make_pair(x,y);
+}
 
