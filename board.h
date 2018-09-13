@@ -7,11 +7,14 @@ typedef pair<int,int> iPair;
 
 class Board{
 	public:
+	Board();
 	vector<iPair > markerPos;
 	vector<iPair > markerPosOpp;
 	vector<iPair > ringPos;
 	vector<iPair > ringPosOpp;
-	int myBoard[11][11] = {0};
+	vector<iPair> possibleMoves[5];
+	double cost[5];
+	int myBoard[11][11];
 	iPair hex_to_coord(iPair hex);
 	iPair coord_to_hex(iPair coord);
 	void opponentMove(string s);
@@ -22,6 +25,10 @@ class Board{
 	void movement(string s, iPair temp, iPair index);
 	iPair coord_to_index(iPair coord);
 	iPair index_to_coord(iPair index);
+	void myMove();
+	void printPair(iPair);
+	void initialMove();
+	void possibleMovements(iPair,int);
 };
 
 #endif /* BOARD_H_ */

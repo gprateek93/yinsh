@@ -3,6 +3,9 @@
 #include <utility>
 #include <cstring>
 #include <sstream>
+#include <ctime>
+#include <cstdlib>
+#include <algorithm>
 #include "board.h"
 using namespace std;
 
@@ -11,6 +14,7 @@ int myRing = 2;
 int oppMarker = 3;
 int myMarker = 4;
 int empty = 0;
+int invalidPos = -1;
 iPair temp;
 
 int myInt(string s){
@@ -19,6 +23,34 @@ int myInt(string s){
 	return i;
 }
 
+Board::Board(){
+	int i,j,k;
+	for(i=0;i<11;i++){
+		for(j=0;j<11;j++){
+			myBoard[i][j]=-1;
+		}
+	}
+	for(i=0; i<11;i++){
+		if(i==0 || i==10){
+			for(k=1;k<=4;k++){
+				myBoard[i][k+i/2]=0;
+			}
+			
+		}
+		else if(i==5){
+			for(j=1;j<=9;j++){
+				myBoard[i][j]=0;
+			}
+		}
+		else{
+			j=(i/5)?i-5:0;
+		    k=((i+5)/10)?10:(i+5);
+			for(;j<=k;j++){
+				myBoard[i][j]=0;
+			}
+		}
+	}
+}
 iPair Board :: hex_to_coord(iPair hex){
 	iPair coord;
 	int x,y;
@@ -114,7 +146,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 	if(temp.first == index.first){
 		if(temp.second>index.second){
 			for(int i = temp.second-1; i>index.second; i--){
-				if(myBoard[temp.first][i]){
+				if(myBoard[temp.first][i]>0){
 					if(s == "M"){
 						flipMarker(make_pair(temp.first,i),myBoard[temp.first][i]);
 						myBoard[temp.first][i] = oppMarker+myMarker-myBoard[temp.first][i];
@@ -128,7 +160,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 		}
 		else if(temp.second<index.second){
 			for(int i = temp.second+1; i<index.second; i++){
-				if(myBoard[temp.first][i]){
+				if(myBoard[temp.first][i]>0){
 					if(s == "M"){
 						flipMarker(make_pair(temp.first,i),myBoard[temp.first][i]);
 						myBoard[temp.first][i] = oppMarker+myMarker-myBoard[temp.first][i];
@@ -146,7 +178,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 	else if(temp.second == index.second){
 		if(temp.first>index.first){
 			for(int i = temp.first-1; i>index.first; i--){
-				if(myBoard[i][temp.second]){
+				if(myBoard[i][temp.second]>0){
 					if(s == "M"){
 						flipMarker(make_pair(i,temp.second),myBoard[i][temp.second]);
 						myBoard[i][temp.second] = oppMarker+myMarker-myBoard[i][temp.second];
@@ -160,7 +192,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 		}
 		else if(temp.first<index.first){
 			for(int i = temp.first+1; i<index.first; i++){
-				if(myBoard[i][temp.second]){
+				if(myBoard[i][temp.second]>0){
 					if(s == "M"){
 						flipMarker(make_pair(i,temp.second),myBoard[i][temp.second]);
 						myBoard[i][temp.second] = oppMarker+myMarker-myBoard[i][temp.second];
@@ -179,7 +211,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 		int diff = abs(index.second - temp.second);
 		if(temp.first<index.first && temp.second<index.second){
 			for(int i = 1; i<diff; i++){
-				if(myBoard[temp.first+i][temp.second+i]){
+				if(myBoard[temp.first+i][temp.second+i]>0){
 					if(s == "M"){
 						flipMarker(make_pair(temp.first+i,temp.second+i),myBoard[temp.first+i][temp.second+i]);
 						myBoard[temp.first+i][temp.second+i] = oppMarker+myMarker-myBoard[temp.first+i][temp.second+i];
@@ -193,7 +225,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 		}
 		else if(temp.first>index.first && temp.second>index.second){
 			for(int i = 1; i<diff; i++){
-				if(myBoard[temp.first-i][temp.second-i]){
+				if(myBoard[temp.first-i][temp.second-i]>0){
 					if(s == "M"){
 						flipMarker(make_pair(temp.first-i,temp.second-i),myBoard[temp.first-i][temp.second-i]);
 						myBoard[temp.first-i][temp.second-i] = oppMarker+myMarker-myBoard[temp.first-i][temp.second-i];
@@ -271,4 +303,174 @@ iPair Board::index_to_coord(iPair index){
 	int x = index.first +5;
 	int y = index.second +5;
 	return make_pair(x,y);
+}
+
+void Board:: myMove(){
+	int i;
+	for(i=0;i<ringPos.size();i++){
+		possibleMovements(ringPos[i],i);
+	}
+    
+    // possible moves
+	for(i=0;i<5;i++){
+		cout<<"[";
+		printPair(ringPos[i]);
+		cout<<": ";
+		for(int j=0;j<possibleMoves[i].size();j++){
+			cout<<" ";
+			printPair(possibleMoves[i][j]);
+		}
+		cout<<"]"<<endl;
+	}
+}
+void Board:: printPair(iPair pair){
+	cout<<"("<<pair.first-5<<","<<pair.second-5<<")";
+}
+
+void Board::initialMove(){
+	for(int i=0;i<5;i++){
+		int x,y;
+		do{
+			srand(rand()^time(0));
+			x= rand()%5 + 3;
+			y= rand()%5 + 3;
+		}while(myBoard[x][y]!=0);
+		cout<<"P "<<x<<" "<<y<<endl;
+		myBoard[x][y]=myRing;
+		ringPos.push_back(make_pair(x,y));
+	}
+}
+
+void Board :: possibleMovements(iPair ring, int ringNo){
+
+	//vertical down move
+    int i = ring.first;
+    int j;
+	for(j = ring.second-1; j>=0;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;j>=0 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);j--){
+				//do nothing
+			}
+			if(j>=0 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;j>=0 && myBoard[i][j]==empty;j--){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+			
+    //verical up move
+	for(j = ring.second+1; j<=10;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;j<=10 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);j++){
+				//do nothing
+			}
+			if(j<=10 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;j<=10 && myBoard[i][j]==empty;j++){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+
+
+	//horizontal right move
+	j = ring.second;	
+	for(i = ring.first+1; i<=10;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;i<=10 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);i++){
+				//do nothing
+			}
+			if(i<=10 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;i<=10 && myBoard[i][j]==empty;i++){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+
+	//horizontal left move
+	for(i = ring.first-1; i>=0;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;i>=0 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);i--){
+				//do nothing
+			}
+			if(i>=0 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;i>=0 && myBoard[i][j]==empty;i--){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+		
+
+	//diagonal down move
+	i=ring.first+1;
+	j=ring.second+1;
+    for(; i<=10 && j<=10;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;i<=10 && j<=10 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);i++,j++){
+				//do nothing
+			}
+			if(i<=10 && j<=10 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;i<=10 && j<=10 && myBoard[i][j]==empty;i++,j++){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+
+
+	//diagonal down move
+	i=ring.first-1;
+	j=ring.second-1;
+    for(; i>=0 && j>=0;){
+		if(myBoard[i][j]==oppRing||myBoard[i][j]==myRing || myBoard[i][j]==invalidPos)
+			break;
+		else if(myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker){
+			for(;i>=0 && j>=0 && (myBoard[i][j]==oppMarker||myBoard[i][j]==myMarker);i--,j--){
+				//do nothing
+			}
+			if(i>=0 && j>=0 && myBoard[i][j]==empty){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+			break;
+		}
+		else if(myBoard[i][j]==empty){
+			for(;i>=0 && j>=0 && myBoard[i][j]==empty;i--,j--){
+				possibleMoves[ringNo].push_back(make_pair(i,j));
+			}
+		}				
+	}
+
 }

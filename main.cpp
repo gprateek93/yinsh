@@ -3,6 +3,7 @@
 #include "board.h"
 #include <vector>
 using namespace std;
+void print(Board);
 
 int main(){
 	Board B;
@@ -50,5 +51,19 @@ int main(){
 		}
 		cout<<endl;
 	}
+
+
+	print(B);
+	B.initialMove();
+	print(B);
+	B.myMove();
 	return 0;
+}
+void print(Board B){
+	for(int i = 0; i<11; i++){
+		for(int j = 0; j<11; j++){
+			cout<< B.myBoard[i][j]<<" ";
+		}
+		cout<<endl;
+	}
 }
