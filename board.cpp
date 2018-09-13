@@ -1,12 +1,29 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <cstring>
+#include <sstream>
 #include "board.h"
 using namespace std;
 
-pair<int,int> Board::hex_to_coord(int h,int p){
-	pair<int,int> coord;
+int oppRing = 1;
+int myRing = 2;
+int oppMarker = 3;
+int myMarker = 4;
+int empty = 0;
+iPair temp;
+
+int myInt(string s){
+	int i;
+	istringstream(s)>>i;
+	return i;
+}
+
+iPair Board :: hex_to_coord(iPair hex){
+	iPair coord;
 	int x,y;
+	int h  = hex.first;
+	int p = hex.second;
 	if(p<=h){
 		x = p;
 		y = h;
@@ -35,9 +52,11 @@ pair<int,int> Board::hex_to_coord(int h,int p){
 	return coord;
 }
 
-pair<int,int> Board::coord_to_hex(int x, int y){
-	pair<int,int> hex;
+iPair Board :: coord_to_hex(iPair coord){
+	iPair hex;
 	int h,p;
+	int x = coord.first;
+	int y = coord.second;
 	if(x>=0&&y>=0){
 		if(x<=y){
 			h = y;
@@ -70,15 +89,119 @@ pair<int,int> Board::coord_to_hex(int x, int y){
 	return hex;
 }
 
-pair<int,int> Board::coord_to_index(pair<int,int> coord){
+void Board :: movement(string s,iPair temp, iPair index){
+
+	//horizontal move
+	if(temp.first == index.first){
+		if(temp.second>index.second){
+			for(int i = temp.second-1; i>index.second; i--){
+				if(myBoard[temp.first][i]){
+					myBoard[temp.first][i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first][i]:empty;
+				}
+			}
+		}
+		else if(temp.second<index.second){
+			for(int i = temp.second+1; i<index.second; i++){
+				if(myBoard[temp.first][i]){
+					myBoard[temp.first][i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first][i]:empty;
+				}
+			}
+		}
+	}
+
+	//vertical move
+	else if(temp.second == index.second){
+		if(temp.first>index.first){
+			for(int i = temp.first-1; i>index.first; i--){
+				if(myBoard[i][temp.second]){
+					myBoard[i][temp.second] = (s=="M")?oppMarker+myMarker-myBoard[i][temp.second]:empty;
+				}
+			}
+		}
+		else if(temp.first<index.first){
+			for(int i = temp.first+1; i<index.first; i++){
+				if(myBoard[i][temp.second]){
+					myBoard[i][temp.second] = (s=="M")?oppMarker+myMarker-myBoard[i][temp.second]:empty;
+				}
+			}
+		}
+	}
+
+	//diagonal move
+	else{
+		int diff = abs(index.second - temp.second);
+		if(temp.first<index.first && temp.second<index.second){
+			for(int i = 1; i<diff; i++){
+				if(myBoard[temp.first+i][temp.second+i]){
+					myBoard[temp.first+i][temp.second+i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first+i][temp.second+i]:empty;
+				}
+			}
+		}
+		else if(temp.first>index.first && temp.second>index.second){
+			for(int i = 1; i<diff; i++){
+				if(myBoard[temp.first-i][temp.second-i]){
+					myBoard[temp.first-i][temp.second-i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first-i][temp.second-i]:empty;
+				}
+			}
+		}
+	}
+}
+
+void Board :: newOppMove(string move, int h, int p){
+	iPair hex = make_pair(h,p);
+	iPair coord = hex_to_coord(hex);
+	iPair index = coord_to_index(coord);
+
+	if(move == "P"){
+		myBoard[index.first][index.second] = oppRing;
+	}
+
+	else if(move == "S" || move == "RS"){
+		temp = index;
+	}
+
+	else if(move == "M"){
+		movement(move,temp,index);
+		myBoard[temp.first][temp.second] = oppMarker;
+		myBoard[index.first][index.second] = oppRing;
+	}
+	else if(move == "RE"){
+		movement(move,temp,index);
+		myBoard[temp.first][temp.second] = empty;
+		myBoard[index.first][index.second] = empty;
+	}
+	else if(move == "X"){
+		myBoard[index.first][index.second] = empty;
+	}
+}
+
+void Board :: opponentMove(string s){
+	vector<string> move;
+	char* token = strtok((char*)s.c_str()," ");
+	while(token!=NULL){
+		string tok(token);
+		move.push_back(tok);
+		token = strtok(NULL," ");
+	}
+	int n = move.size();
+	string h,p;
+	for(int i = 0; i<n; i+=3){
+		if(i%3 == 0){
+			h = move[i+1];
+			p = move[i+2];
+			newOppMove(move[i],myInt(h),myInt(p));
+		}
+	}
+}
+
+iPair Board::coord_to_index(iPair coord){
 	int x = coord.first +5;
 	int y = coord.second +5;
 	return make_pair(x,y);
 }
 
-pair<int,int> Board::index_to_coord(pair<int,int> index){
+iPair Board::index_to_coord(iPair index){
 	int x = index.first +5;
 	int y = index.second +5;
 	return make_pair(x,y);
 }
-

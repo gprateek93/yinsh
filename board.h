@@ -3,20 +3,22 @@
 #include <vector>
 #include <utility>
 using namespace std;
+typedef pair<int,int> iPair;
 
 class Board{
 	public:
-	int maxHex = 5;
-	vector<pair<int, int> > markerPos;
-	vector<pair<int, int> > markerPosOpp;
-	vector<pair<int, int> > ringPos;
-	vector<pair<int, int> > ringPosOpp;
-	int[11][11] myBoard = {0};
-	pair<int, int> hex_to_coord(int h,int p);
-	pair<int, int> coord_to_hex(int x, int y);
-	void moveRing(int index, int h, int p);
-	pair<int,int> coord_to_index(pair<int,int>);
-	pair<int,int> index_to_coord(pair<int,int>);
+	vector<iPair > markerPos;
+	vector<iPair > markerPosOpp;
+	vector<iPair > ringPos;
+	vector<iPair > ringPosOpp;
+	int myBoard[11][11] = {0};
+	iPair hex_to_coord(iPair hex);
+	iPair coord_to_hex(iPair coord);
+	void opponentMove(string s);
+	void newOppMove(string s, int h, int p);
+	void movement(string s, iPair temp, iPair index);
+	iPair coord_to_index(iPair coord);
+	iPair index_to_coord(iPair index);
 };
 
 #endif /* BOARD_H_ */

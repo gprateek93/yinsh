@@ -1,66 +1,27 @@
 #include <iostream>
 #include <utility>
+#include "board.h"
 #include <vector>
-
 using namespace std;
 
-int Max = 0;
-int Min = 1;
-
-typedef struct node{
-	int positions[9];
-	int type;
-	int utility;
-	vector<struct node*> children;
-}node;
-
-
-class Solution{
-	Board board;
-	possibleMoves();
-
-};
-
-node* new_node(int type, int* positions, int position){
-	node* newNode = new node();
-	for(int i=0; i<9; i++){
-		newNode->positions[i] = positions[i];
-		//cout<<newNode->positions[i]<<" ";
-	}
-	newNode->type = type;
-	newNode->positions[position] = type;
-	return newNode;
-}
-
-bool is_terminal(node* state){
-	for(int i=0; i<8; i++){
-
-	}
-	return true;
-}
-
-int utility(node* state){
-	return 1;
-
-}
-/*
-function M AX -V ALUE (state) returns a utility value
-if T ERMINAL -T EST(state) then return UTILITY(state)
-v ← −∞
-for each a in ACTIONS(state) do
-v ← M AX(v , MIN -V ALUE(R ESULT (s, a)))
-return v
-*/
-
-void constructMinMaxTree(node* root){
-	// init step and call min_value on all possible moves
-}
-
-
-
 int main(){
-	node* root = new node();
-	root->type = Max;
-	constructMinMaxTree(root);
+	Board B;
+	B.opponentMove("P 0 0");
+	B.opponentMove("P 1 0");
+	B.opponentMove("P 2 0");
+	B.opponentMove("P 3 0");
+	B.opponentMove("P 4 0");
+	B.opponentMove("S 0 0 M 1 1");
+	B.opponentMove("S 1 0 M 2 1");
+	B.opponentMove("S 2 0 M 3 5");
+	B.opponentMove("S 3 0 M 4 7");
+	B.opponentMove("S 4 0 M 5 9");
+	B.opponentMove("RS 0 0 RE 4 0 X 1 1");
+	for(int i = 0; i<11; i++){
+		for(int j = 0; j<11; j++){
+			cout<< B.myBoard[i][j]<<" ";
+		}
+		cout<<endl;
+	}
 	return 0;
 }
