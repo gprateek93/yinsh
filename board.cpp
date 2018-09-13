@@ -88,6 +88,25 @@ iPair Board :: coord_to_hex(iPair coord){
 	hex = make_pair(h,p);
 	return hex;
 }
+void Board :: flipMarker(iPair index,int val){
+	if(val == oppMarker){
+		markerPosOpp.erase(find(markerPosOpp.begin(),markerPosOpp.end(),index));
+		markerPos.push_back(index);
+	}
+	else{
+		markerPos.erase(find(markerPos.begin(),markerPos.end(),index));
+		markerPosOpp.push_back(index);
+	}
+}
+
+void Board :: removeMarker(vector<iPair> &vec, iPair index){
+	vec.erase(find(vec.begin(),vec.end(),index));
+}
+
+void Board :: moveRing(vector<iPair> &vec,iPair temp, iPair index){
+	vec.erase(find(vec.begin(),vec.end(),temp));
+	vec.push_back(index);
+}
 
 void Board :: movement(string s,iPair temp, iPair index){
 
@@ -96,14 +115,28 @@ void Board :: movement(string s,iPair temp, iPair index){
 		if(temp.second>index.second){
 			for(int i = temp.second-1; i>index.second; i--){
 				if(myBoard[temp.first][i]){
-					myBoard[temp.first][i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first][i]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(temp.first,i),myBoard[temp.first][i]);
+						myBoard[temp.first][i] = oppMarker+myMarker-myBoard[temp.first][i];
+					}
+					else{
+						myBoard[temp.first][i] = empty;
+						removeMarker(markerPosOpp,make_pair(temp.first,i));
+					}
 				}
 			}
 		}
 		else if(temp.second<index.second){
 			for(int i = temp.second+1; i<index.second; i++){
 				if(myBoard[temp.first][i]){
-					myBoard[temp.first][i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first][i]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(temp.first,i),myBoard[temp.first][i]);
+						myBoard[temp.first][i] = oppMarker+myMarker-myBoard[temp.first][i];
+					}
+					else{
+						myBoard[temp.first][i] = empty;
+						removeMarker(markerPosOpp,make_pair(temp.first,i));
+					}
 				}
 			}
 		}
@@ -114,14 +147,28 @@ void Board :: movement(string s,iPair temp, iPair index){
 		if(temp.first>index.first){
 			for(int i = temp.first-1; i>index.first; i--){
 				if(myBoard[i][temp.second]){
-					myBoard[i][temp.second] = (s=="M")?oppMarker+myMarker-myBoard[i][temp.second]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(i,temp.second),myBoard[i][temp.second]);
+						myBoard[i][temp.second] = oppMarker+myMarker-myBoard[i][temp.second];
+					}
+					else{
+						myBoard[i][temp.second] = empty;
+						removeMarker(markerPosOpp,make_pair(i,temp.second));
+					}
 				}
 			}
 		}
 		else if(temp.first<index.first){
 			for(int i = temp.first+1; i<index.first; i++){
 				if(myBoard[i][temp.second]){
-					myBoard[i][temp.second] = (s=="M")?oppMarker+myMarker-myBoard[i][temp.second]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(i,temp.second),myBoard[i][temp.second]);
+						myBoard[i][temp.second] = oppMarker+myMarker-myBoard[i][temp.second];
+					}
+					else{
+						myBoard[i][temp.second] = empty;
+						removeMarker(markerPosOpp,make_pair(i,temp.second));
+					}
 				}
 			}
 		}
@@ -133,14 +180,28 @@ void Board :: movement(string s,iPair temp, iPair index){
 		if(temp.first<index.first && temp.second<index.second){
 			for(int i = 1; i<diff; i++){
 				if(myBoard[temp.first+i][temp.second+i]){
-					myBoard[temp.first+i][temp.second+i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first+i][temp.second+i]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(temp.first+i,temp.second+i),myBoard[temp.first+i][temp.second+i]);
+						myBoard[temp.first+i][temp.second+i] = oppMarker+myMarker-myBoard[temp.first+i][temp.second+i];
+					}
+					else{
+						myBoard[temp.first+i][temp.second+i] = empty;
+						removeMarker(markerPosOpp,make_pair(temp.first+i,temp.second+i));
+					}
 				}
 			}
 		}
 		else if(temp.first>index.first && temp.second>index.second){
 			for(int i = 1; i<diff; i++){
 				if(myBoard[temp.first-i][temp.second-i]){
-					myBoard[temp.first-i][temp.second-i] = (s=="M")?oppMarker+myMarker-myBoard[temp.first-i][temp.second-i]:empty;
+					if(s == "M"){
+						flipMarker(make_pair(temp.first-i,temp.second-i),myBoard[temp.first-i][temp.second-i]);
+						myBoard[temp.first-i][temp.second-i] = oppMarker+myMarker-myBoard[temp.first-i][temp.second-i];
+					}
+					else{
+						myBoard[temp.first-i][temp.second-i] = empty;
+						removeMarker(markerPosOpp,make_pair(temp.first-i,temp.second-i));
+					}
 				}
 			}
 		}
@@ -153,6 +214,7 @@ void Board :: newOppMove(string move, int h, int p){
 	iPair index = coord_to_index(coord);
 
 	if(move == "P"){
+		ringPosOpp.push_back(index);
 		myBoard[index.first][index.second] = oppRing;
 	}
 
@@ -161,16 +223,21 @@ void Board :: newOppMove(string move, int h, int p){
 	}
 
 	else if(move == "M"){
+		markerPosOpp.push_back(temp);
+		moveRing(ringPosOpp,temp,index);
 		movement(move,temp,index);
 		myBoard[temp.first][temp.second] = oppMarker;
 		myBoard[index.first][index.second] = oppRing;
 	}
 	else if(move == "RE"){
 		movement(move,temp,index);
+		removeMarker(markerPosOpp,temp);
+		removeMarker(markerPosOpp,index);
 		myBoard[temp.first][temp.second] = empty;
 		myBoard[index.first][index.second] = empty;
 	}
 	else if(move == "X"){
+		ringPosOpp.erase(find(ringPosOpp.begin(),ringPosOpp.end(),index));
 		myBoard[index.first][index.second] = empty;
 	}
 }
