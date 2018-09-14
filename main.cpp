@@ -5,7 +5,8 @@
 using namespace std;
 void print(Board);
 
-int main(){
+/*int main(){
+
 	Board B;
 	B.opponent_player_Move("P 0 0",0);
 	B.opponent_player_Move("P 1 0",0);
@@ -79,4 +80,34 @@ void print(Board B){
 		}
 		cout<<endl;
 	}
+}*/
+
+int main(int argc, char** argv) {
+    Board B;
+    int player_id, board_size, time_limit;
+    string move,dull,time_rem;
+    // Get input from server about game specifications
+    cin >> player_id >> board_size >> time_limit;
+    getline(cin,dull);
+    if(player_id == 2) {
+        // Get other player's move
+        getline(cin,move);
+        getline(cin,time_rem);
+        while(true) {
+			//cout<<"Opponent's move: "<<move<<endl;
+			B.opponent_player_Move(move,0);
+            getline(cin,move);
+        }
+    }
+    else if(player_id == 1) {
+        while(true){
+            //cout<<"hello";
+			B.myMove();
+            cout<<"Time remaining is: "<<time_limit<<"s"<<endl;
+    		//cout<<"My move: "<<B.playeMove<<endl;
+            cout<<"You played : "<<B.playerMove<<endl;
+            getline(cin,move);
+        }
+    }
+    return 0;
 }
