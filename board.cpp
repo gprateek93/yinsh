@@ -142,7 +142,7 @@ void Board :: moveRing(vector<iPair> &vec,iPair temp, iPair index){
 
 void Board :: movement(string s,iPair temp, iPair index){
 
-	//horizontal move
+	//vertical move
 	if(temp.first == index.first){
 		if(temp.second>index.second){
 			for(int i = temp.second-1; i>index.second; i--){
@@ -174,7 +174,7 @@ void Board :: movement(string s,iPair temp, iPair index){
 		}
 	}
 
-	//vertical move
+	//horizontal move
 	else if(temp.second == index.second){
 		if(temp.first>index.first){
 			for(int i = temp.first-1; i>index.first; i--){
@@ -471,6 +471,138 @@ void Board :: possibleMovements(iPair ring, int ringNo){
 				possibleMoves[ringNo].push_back(make_pair(i,j));
 			}
 		}				
+	}
+
+}
+
+void reset(bool* flag, int n){
+	for(int i=0;i<n;i++){
+		flag[i]=true;
+	}
+}
+
+void Board:: findContinuousMarkers(vector<iPair> &marker, int markerValue){
+
+	int i,j,k,p,q;
+	int count = 0;
+	bool flag[marker.size()];
+
+	reset(flag,marker.size());
+	
+	//check horizontally
+	for(i=0;i<marker.size();i++){
+
+		if(flag[i]){
+			count =1;
+			p=marker[i].second;
+			for(j=marker[i].first+1;j<=10 && myBoard[j][p]==markerValue;j++){
+				flag[find(marker.begin(),marker.end(),make_pair(j,p)) - marker.begin()] = false;				
+				count++;
+			}
+
+			for(k=marker[i].first-1;k>=0 && myBoard[k][p]==markerValue;k--){
+				flag[find(marker.begin(),marker.end(),make_pair(k,p)) - marker.begin()] = false;
+				count++;
+			}
+			//when we have to remove ring
+			if(count>=5){
+				marker_5.push_back(make_pair(make_pair(k+1,p),make_pair(k+5,p)));
+				if(count!=5)
+					marker_5.push_back(make_pair(make_pair(j-5,p),make_pair(j-1,p)));
+			}
+			//4 continuous markers
+			else if(count == 4){
+				if(j<=10 && myBoard[j][p] == empty){
+					marker_4.push_back(make_pair(j,p));
+				}
+				if(k>=0 && myBoard[k][p] == empty){
+					marker_4.push_back(make_pair(k,p));
+				}
+			}
+
+			//3 continuous markers.....
+			flag[i]=false;
+		}
+	}
+
+	reset(flag,marker.size());
+	
+	//check Vertically
+	for(i=0;i<marker.size();i++){
+
+		if(flag[i]){
+			count =1;
+			p=marker[i].first;
+			for(j=marker[i].second+1;j<=10 && myBoard[p][j]==markerValue;j++){
+				flag[find(marker.begin(),marker.end(),make_pair(p,j)) - marker.begin()] = false;				
+				count++;
+			}
+
+			for(k=marker[i].second-1;k>=0 && myBoard[p][k]==markerValue;k--){
+				flag[find(marker.begin(),marker.end(),make_pair(p,k)) - marker.begin()] = false;
+				count++;
+			}
+			//when we have to remove ring
+			if(count>=5){
+				marker_5.push_back(make_pair(make_pair(p,k+1),make_pair(p,k+5)));
+				if(count!=5)
+					marker_5.push_back(make_pair(make_pair(p,j-5),make_pair(p,j-1)));
+			}
+			//4 continuous markers
+			else if(count == 4){
+				if(j<=10 && myBoard[p][j] == empty){
+					marker_4.push_back(make_pair(p,j));
+				}
+				if(k>=0 && myBoard[p][k] == empty){
+					marker_4.push_back(make_pair(p,k));
+				}
+			}
+
+			//3 continuous markers.....
+			flag[i]=false;
+		}
+	}
+
+
+	reset(flag,marker.size());
+	
+	//check diagonally
+	for(i=0;i<marker.size();i++){
+
+		if(flag[i]){
+			count =1;
+			p=marker[i].first+1;
+			q=marker[i].second+1;
+			for(;p<=10 && q<=10 && myBoard[p][q]==markerValue;p++,q++){
+				flag[find(marker.begin(),marker.end(),make_pair(p,q)) - marker.begin()] = false;				
+				count++;
+			}
+
+			j=marker[i].first-1;
+			k=marker[i].second-1;
+			for(;j>=0 && k>=0 && myBoard[j][k]==markerValue;j--,k--){
+				flag[find(marker.begin(),marker.end(),make_pair(j,k)) - marker.begin()] = false;
+				count++;
+			}
+			//when we have to remove ring
+			if(count>=5){
+				marker_5.push_back(make_pair(make_pair(j+1,k+1),make_pair(j+5,k+5)));
+				if(count!=5)
+					marker_5.push_back(make_pair(make_pair(p-5,q-5),make_pair(p-1,q-1)));
+			}
+			//4 continuous markers
+			else if(count == 4){
+				if(p<=10 && q<=10 && myBoard[p][q] == empty){
+					marker_4.push_back(make_pair(p,q));
+				}
+				if(j>=0 && k>=0 && myBoard[j][k] == empty){
+					marker_4.push_back(make_pair(j,k));
+				}
+			}
+
+			//3 continuous markers.....
+			flag[i]= false;
+		}
 	}
 
 }

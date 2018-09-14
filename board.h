@@ -13,6 +13,8 @@ class Board{
 	vector<iPair > ringPos;
 	vector<iPair > ringPosOpp;
 	vector<iPair> possibleMoves[5];
+	vector< pair<iPair,iPair> > marker_5;
+	vector<iPair> marker_4;
 	double cost[5];
 	int myBoard[11][11];
 	iPair hex_to_coord(iPair hex);
@@ -29,6 +31,7 @@ class Board{
 	void printPair(iPair);
 	void initialMove();
 	void possibleMovements(iPair,int);
+	void findContinuousMarkers(vector<iPair> &marker, int markerValue);
 };
 
 #endif /* BOARD_H_ */
