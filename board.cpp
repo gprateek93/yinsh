@@ -32,6 +32,8 @@ string myString(int n){
 
 Board::Board(){
 	int i,j,k;
+
+	ringRemoved = 0;
 	for(i=0;i<11;i++){
 		for(j=0;j<11;j++){
 			myBoard[i][j]=-1;
@@ -145,8 +147,8 @@ void Board :: removeMarker(vector<iPair> &vec, iPair index){
 }
 
 void Board :: moveRing(vector<iPair> &vec,iPair temp, iPair index){
-	//vec.erase(find(vec.begin(),vec.end(),temp));
-	cout<<"Here"<<endl;
+	vec.erase(find(vec.begin(),vec.end(),temp));
+	//cout<<"Here"<<endl;
 	vec.push_back(index);
 }
 
@@ -280,11 +282,11 @@ void Board :: newOpp_player_Move(string move, int h, int p, int flag){
 			myBoard[index.first][index.second] = oppRing;
 		}
 		else{
-			cout<<"Here"<<endl;
+			//cout<<"Here"<<endl;
 			markerPos.push_back(temp);
-			cout<<"Here1"<<endl;
+			//cout<<"Here1"<<endl;
 			moveRing(ringPos,temp,index);
-			cout<<"Here1"<<endl;
+			//cout<<"Here1"<<endl;
 			movement(move,temp,index,flag);
 			myBoard[temp.first][temp.second] = myMarker;
 			myBoard[index.first][index.second] = myRing;
@@ -354,12 +356,19 @@ void Board:: myMove(){
 	//initial 5 moves
 	if(initial_counter<5){
 		initialMove();
-		cout<<playerMove<<" here"<<endl;
+		//cout<<playerMove<<" here"<<endl;
 		initial_counter++;
 		opponent_player_Move(playerMove,1);
 		return;
 	}
+	marker_5.clear();
 	findContinuousMarkers(markerPos,myMarker);
+	//all possible movements of rings
+	possibleMoves.clear();
+	for(int i=0;i<ringPos.size();i++){
+		possibleMovements(ringPos[i]);
+	}
+
 	if(marker_5.size()){
 		//selecting random 5 continuous markers --> to be changed after heuristic evaluation
 		srand(rand()^time(0));
@@ -369,33 +378,46 @@ void Board:: myMove(){
 		//getting start and end positions for markers to be removed.
 		iPair RS = coord_to_hex(marker_5[index].first);
 		iPair RE = coord_to_hex(marker_5[index].second);
-		playerMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + "RE "+ myString(RE.first)+" "+myString(RE.second);
+		playerMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
 
 		//selecting any random ring which has to be removed --> to be changed after heuristic
 		size = ringPos.size();
 		index = rand()%size;
 		iPair X = coord_to_hex(ringPos[index]);
 		playerMove+= " X "+myString(X.first)+" "+myString(X.second);
+		ringRemoved++;
+		if(ringRemoved==3) return;
+
+		opponent_player_Move(playerMove,1);
+
+		int i,j;
+		size = ringPos.size();
+		do{
+			i = rand()%size;
+		}while(!possibleMoves[i].size());
+		j = rand()%possibleMoves[i].size();
+		//cout<<"here"<<endl;
+		string heyMove;
+		iPair a = coord_to_hex(ringPos[i]);
+		iPair b = coord_to_hex(possibleMoves[i][j]);
+		heyMove = "S "+myString(a.first)+" "+myString(a.second);
+		heyMove+= " M "+myString(b.first)+" "+myString(b.second);
+		playerMove+= " S "+myString(a.first)+" "+myString(a.second);
+		playerMove+=" M "+myString(b.first)+" "+myString(b.second);
+		opponent_player_Move(heyMove,1);
 	}
 	else{
-
-		//all possible movements of rings
-		possibleMoves.clear();
-		for(int i=0;i<ringPos.size();i++){
-			possibleMovements(ringPos[i]);
-		}
-
 
 		int flag = 0;   //for breaking outer loops
 
 		//Game Play
 		while(true){
-			cout<<"here"<<endl;
+			//cout<<"here"<<endl;
 
 			srand(rand()^time(0));
 			int size = ringPos.size();
-			cout<<size<<endl;
-			cout<<ringPos[0].first<<" "<<ringPos[0].second<<endl;
+			//cout<<size<<endl;
+			//cout<<ringPos[0].first<<" "<<ringPos[0].second<<endl;
 
 			/*for(int i = 0; i<size;i++){
 				if(find(marker_4.begin(),marker_4.end(),ringPos[i])!=marker_4.end()){
@@ -416,13 +438,13 @@ void Board:: myMove(){
 			if(flag == 1)
 				break;*/
 
-			for(int i = 0; i<size; i++){
-				cout<<"here"<<endl;
-				cout<<possibleMoves[i].size()<<endl;
-				cout<<"here"<<endl;
+			/*for(int i = 0; i<size; i++){
+				////cout<<"here"<<endl;
+				////cout<<possibleMoves[i].size()<<endl;
+				////cout<<"here"<<endl;
 				//checking if the ring can be moved adjacent to 4 continuous markers
 				for(int j = 0 ; j<possibleMoves[i].size(); j++){
-					//cout<<"here"<<endl;
+					////cout<<"here"<<endl;
 					if(find(marker_4.begin(),marker_4.end(),possibleMoves[i][j])!=marker_4.end()){
 						iPair a = coord_to_hex(ringPos[i]);
 						iPair b = coord_to_hex(possibleMoves[i][j]);
@@ -438,40 +460,63 @@ void Board:: myMove(){
 			}
 			if(flag == 1)
 				break;
-
+			*/
 			//selecting random ring and random move
-			int i;
+			int i,j;
 			do{
 				i = rand()%size;
 			}while(!possibleMoves[i].size());
-			int j = rand()%possibleMoves[i].size();
-			cout<<"here"<<endl;
+			j = rand()%possibleMoves[i].size();
+			//cout<<"here"<<endl;
 			iPair a = coord_to_hex(ringPos[i]);
 			iPair b = coord_to_hex(possibleMoves[i][j]);
 			playerMove = "S "+myString(a.first)+" "+myString(a.second);
 			playerMove+=" M "+myString(b.first)+" "+myString(b.second);
-			cout << playerMove<<endl;
+			opponent_player_Move(playerMove,1);
+			marker_5.clear();
+			findContinuousMarkers(markerPos,myMarker);
+			////cout<< playerMove<<endl;
+			string heyMove;
+			if(marker_5.size()){
+				//selecting random 5 continuous markers --> to be changed after heuristic evaluation
+				srand(rand()^time(0));
+				int size = marker_5.size();
+				int index = rand()%size;
+
+				//getting start and end positions for markers to be removed.
+				iPair RS = coord_to_hex(marker_5[index].first);
+				iPair RE = coord_to_hex(marker_5[index].second);
+				heyMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
+				playerMove+= " RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
+				//selecting any random ring which has to be removed --> to be changed after heuristic
+				size = ringPos.size();
+				index = rand()%size;
+				iPair X = coord_to_hex(ringPos[index]);
+				heyMove+=" X "+myString(X.first)+" "+myString(X.second);
+				playerMove+= " X "+myString(X.first)+" "+myString(X.second);
+				ringRemoved++;
+				opponent_player_Move(heyMove,1);
+			}
 			break;
 		}
-		cout<<"here"<<endl;
+		//cout<<"here"<<endl;
 	}
-	opponent_player_Move(playerMove,1);
 
     // possible moves
 	/*for(i=0;i<5;i++){
-		cout<<"[";
+		//cout<<"[";
 		printPair(ringPos[i]);
-		cout<<": ";
+		//cout<<": ";
 		for(int j=0;j<possibleMoves[i].size();j++){
-			cout<<" ";
+			//cout<<" ";
 			printPair(possibleMoves[i][j]);
 		}
-		cout<<"]"<<endl;
+		//cout<<"]"<<endl;
 	}*/
 }
 
 void Board:: printPair(iPair pair){
-	cout<<"("<<pair.first-5<<","<<pair.second-5<<")";
+	//cout<<"("<<pair.first-5<<","<<pair.second-5<<")";
 }
 
 void Board::initialMove(){
@@ -481,7 +526,7 @@ void Board::initialMove(){
 		x= rand()%5 + 3;
 		y= rand()%4 + 3;
 	}while(myBoard[x][y]!=0);
-	cout<<"P "<<x<<" "<<y<<endl;
+	//cout<<"P "<<x<<" "<<y<<endl;
 	iPair hex = coord_to_hex(make_pair(x,y));
 	playerMove = "P "+myString(hex.first)+" "+myString(hex.second);
 	//myBoard[x][y]=myRing;

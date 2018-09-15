@@ -91,22 +91,23 @@ int main(int argc, char** argv) {
     getline(cin,dull);
     if(player_id == 2) {
         // Get other player's move
-        getline(cin,move);
-        getline(cin,time_rem);
         while(true) {
 			//cout<<"Opponent's move: "<<move<<endl;
-			B.opponent_player_Move(move,0);
             getline(cin,move);
+			B.opponent_player_Move(move,0);
+            B.myMove();
+            cout<<B.playerMove<<endl;
         }
     }
     else if(player_id == 1) {
         while(true){
             //cout<<"hello";
 			B.myMove();
-            cout<<"Time remaining is: "<<time_limit<<"s"<<endl;
     		//cout<<"My move: "<<B.playeMove<<endl;
-            cout<<"You played : "<<B.playerMove<<endl;
+            cout<<B.playerMove<<endl;
             getline(cin,move);
+            //getline(cin,time_rem);
+            B.opponent_player_Move(move,0);
         }
     }
     return 0;

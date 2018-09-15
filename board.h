@@ -17,6 +17,7 @@ class Board{
 	vector<vector<iPair> > possibleMoves;
 	double cost[5];
 	int myBoard[11][11];
+	int ringRemoved;
 	Board();
 	iPair hex_to_coord(iPair hex);
 	iPair coord_to_hex(iPair coord);
