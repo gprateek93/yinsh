@@ -34,6 +34,10 @@ class Board{
 	void initialMove();
 	void possibleMovements(iPair);
 	void findContinuousMarkers(vector<iPair> &marker, int markerValue);
+	iPair removeBadPossibleMove(iPair ring, vector<iPair> &possibleMove);
+	int getCount(int myBoard[11][11]);
+	iPair getMaxWeightedMoveofRing(iPair ring,int);
+	void update_board(int board[11][11],string move);
 };
 
 #endif /* BOARD_H_ */
