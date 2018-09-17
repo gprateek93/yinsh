@@ -541,6 +541,124 @@ void Board::initialMove(){
 	
 }
 
+iPair Board:: getEpicMove(iPair ring){
+
+	int i,j,k,l, count =0;
+	iPair index;
+	//vertical down
+	for(k = ring.second-1; k>=0;k--){
+		if(myBoard[ring.first][k]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(i=k-1;i>=0 && (myBoard[ring.first][i]==myMarker || myBoard[ring.first][i]==oppMarker);i--){
+			//do nothing
+		}
+		if(i>=0 && myBoard[ring.first][i]==empty)
+		{
+			index = make_pair(ring.first,i);
+			return index;
+		}
+	}
+
+
+
+ 	//vertical up
+ 	count =0;
+ 	for(k = ring.second+1; k<=10;k++){
+		if(myBoard[ring.first][k]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(i=k+1;i<=10 && (myBoard[ring.first][i]==myMarker || myBoard[ring.first][i]==oppMarker);i++){
+			//do nothing
+		}
+
+		if( i<=10 && myBoard[ring.first][i]==empty){
+			index = make_pair(ring.first,i);
+			return index;
+		}
+	}
+
+	//horizontal left
+	count =0;
+	for(k = ring.first-1; k>=0;k--){
+		if(myBoard[k][ring.second]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(i=k-1;i>=0 && (myBoard[i][ring.second]==myMarker || myBoard[i][ring.second]==oppMarker);i--){
+			//do nothing
+		}
+
+		if(i>=0 && myBoard[i][ring.second]==empty){
+			index = make_pair(i,ring.second);
+			return index;
+		}
+	}
+
+	//horizontal right
+	count =0;
+	for(k = ring.first+1; k<=10;k++){
+		if(myBoard[k][ring.second]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(i=k+1;i<=10 && (myBoard[i][ring.second]==myMarker || myBoard[i][ring.second]==oppMarker);i++){
+			//do nothing
+		}
+		if(i<=10 && myBoard[i][ring.second]==empty){
+			index = make_pair(i,ring.second);
+			return index;
+		}
+	}
+
+	//diagonal up
+	count =0;
+	for(j= ring.first+1,k = ring.second+1; j<=10 && k<=10;j++,k++){
+		if(myBoard[j][k]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(int i=j+1,l=k+1;i<=10 && l<=10 && (myBoard[i][l]==myMarker || myBoard[i][l]==oppMarker);i++,l++){
+			//do nothing
+		}
+		if(i<=10 && l<=10 && myBoard[i][l]==empty){
+			index = make_pair(i,l);
+			return index;
+		}
+	}
+
+	//diagonal down
+	count =0;
+	for(j= ring.first-1,k = ring.second-1; j>=0 && k>=0;j--,k--){
+		if(myBoard[j][k]!=oppMarker)
+			break;
+		count++;
+		if(count ==4 ) break;
+	}
+	if(count ==4){
+		for(i=j-1,l=k-1;i>=0 && l>=0 && (myBoard[i][l]==myMarker || myBoard[i][l]==oppMarker);i--,l--){
+			//do nothing
+		}
+		if(i>=0 && l>=0 && myBoard[i][l]==empty){
+			index = make_pair(i,l);
+			return index;
+		}
+	}
+	return make_pair(0,0);
+}
+
 void Board:: myMove(){
 
 	playerMove = "";
@@ -561,9 +679,40 @@ void Board:: myMove(){
 		return;
 	}
 
-	updatePossibleMovementsofRings();
+	//Priority2. flip if opponent has 4 continuous markers
+	
+	findContinuousMarkers(markerPosOpp,oppMarker);
+	if(marker_4.size()){
+		for(int i = 0; i<ringPos.size();i++){
+			if(find(marker_4.begin(),marker_4.end(),ringPos[i])!=marker_4.end()){
+
+				//remove the possiblemove which flip your continuous markers
+				iPair rs = getEpicMove(ringPos[i]);
+				//if epic move does not exists -> check for another ring
+				if(rs.first ==0 && rs.second ==0) continue;
+
+				iPair a = coord_to_hex(ringPos[i]);
+				iPair b = coord_to_hex(rs);
+				heyMove = "S "+myString(a.first)+" "+myString(a.second);
+				heyMove +=" M "+myString(b.first)+" "+myString(b.second);
+				playerMove += " S "+myString(a.first)+" "+myString(a.second);
+				playerMove+=" M "+myString(b.first)+" "+myString(b.second);
+
+				opponent_player_Move(heyMove,1);
+
+				removeAll5ContinuousMarkers();
+				//trim playerMove
+				playerMove.erase(0, playerMove.find_first_not_of(" "));
+				return;
+			}
+		}
+	}
+
 
 	//if 4 continuous markers
+
+	updatePossibleMovementsofRings();
+	findContinuousMarkers(markerPos, myMarker);
 	if(marker_4.size()){
 		for(int i = 0; i<ringPos.size();i++){
 			if(find(marker_4.begin(),marker_4.end(),ringPos[i])!=marker_4.end()){
@@ -795,6 +944,7 @@ void reset(bool* flag, int n){
 	}
 }
 
+//this method gives end points of continuous markers
 void Board:: findContinuousMarkers(vector<iPair> &marker, int markerValue){
 
 	int i,j,k,p,q;

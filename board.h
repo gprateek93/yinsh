@@ -38,6 +38,7 @@ class Board{
 	void update_board(int board[11][11],string);
 	void removeAll5ContinuousMarkers();
 	void updatePossibleMovementsofRings();
+	iPair getEpicMove(iPair ring);
 };
 
 #endif /* BOARD_H_ */
