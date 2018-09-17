@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <algorithm>
+#include <climits>
 #include "board.h"
 using namespace std;
 
@@ -17,6 +18,8 @@ int empty = 0;
 int invalidPos = -1;
 int initial_counter = 0;
 iPair temp;
+
+//Helper Functions
 
 int myInt(string s){
 	int i;
@@ -30,10 +33,28 @@ string myString(int n){
 	return ss.str();
 }
 
-Board::Board(){
-	int i,j,k;
+vector<string> tokenize(string s, const char* delimiter){
+	vector<string> tokens;
+	//trim the starting spaces
+	s.erase(0, s.find_first_not_of(" "));
 
+	char* token = strtok((char*)s.c_str(),delimiter);
+
+	while(token!=NULL){
+		string tok(token);
+		tokens.push_back(tok);
+		token = strtok(NULL," ");
+	}
+	return tokens;
+}
+
+//class functions
+
+Board::Board(){
+	
+	int i,j,k;
 	ringRemoved = 0;
+
 	for(i=0;i<11;i++){
 		for(j=0;j<11;j++){
 			myBoard[i][j]=-1;
@@ -319,15 +340,11 @@ void Board :: newOpp_player_Move(string move, int h, int p, int flag){
 		}
 	}
 }
-
+ 
 void Board :: opponent_player_Move(string s,int flag){
 	vector<string> move;
-	char* token = strtok((char*)s.c_str()," ");
-	while(token!=NULL){
-		string tok(token);
-		move.push_back(tok);
-		token = strtok(NULL," ");
-	}
+	
+	move = tokenize(s," ");
 	int n = move.size();
 	string h,p;
 	for(int i = 0; i<n; i+=3){
@@ -338,18 +355,6 @@ void Board :: opponent_player_Move(string s,int flag){
 		}
 	}
 }
-
-/*iPair Board::coord_to_index(iPair coord){
-	int x = coord.first +5;
-	int y = coord.second +5;
-	return make_pair(x,y);
-}
-
-iPair Board::index_to_coord(iPair index){
-	int x = index.first +5;
-	int y = index.second +5;
-	return make_pair(x,y);
-}*/
 
 
 iPair Board::removeBadPossibleMove(iPair ring, vector<iPair> &possibleMove){
@@ -474,201 +479,16 @@ iPair Board::removeBadPossibleMove(iPair ring, vector<iPair> &possibleMove){
 	}
 	return make_pair(5,5);
 }
-void Board:: myMove(){
 
-	//initial 5 moves
-	if(initial_counter<5){
-		initialMove();
-		//cout<<playerMove<<" here"<<endl;
-		initial_counter++;
-		opponent_player_Move(playerMove,1);
-		return;
-	}
+void Board:: removeAll5ContinuousMarkers(){
+	string heyMove;
 
-	findContinuousMarkers(markerPos,myMarker);
-	//all possible movements of rings
-	possibleMoves.clear();
-	for(int i=0;i<ringPos.size();i++){
-		possibleMovements(ringPos[i]);
-	}
-
-	if(marker_5.size()){
-		//selecting random 5 continuous markers --> to be changed after heuristic evaluation
-		srand(rand()^time(0));
-		int size = marker_5.size();
-		int index = rand()%size;
-
-		//getting start and end positions for markers to be removed.
-		iPair RS = coord_to_hex(marker_5[index].first);
-		iPair RE = coord_to_hex(marker_5[index].second);
-		playerMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
-
-		//selecting any random ring which has to be removed --> to be changed after heuristic
-		size = ringPos.size();
-		index = rand()%size;
-		iPair X = coord_to_hex(ringPos[index]);
-		playerMove+= " X "+myString(X.first)+" "+myString(X.second);
-		ringRemoved++;
-		if(ringRemoved==3) return;
-
-		opponent_player_Move(playerMove,1);
-
-		possibleMoves.clear();
-		for(int i=0;i<ringPos.size();i++){
-			possibleMovements(ringPos[i]);
-		}
-		int i,j;
-		size = ringPos.size();
-		do{
-			i = rand()%size;
-		}while(!possibleMoves[i].size());
-		j = rand()%possibleMoves[i].size();
-		//cout<<"here"<<endl;
-		string heyMove;
-		iPair a = coord_to_hex(ringPos[i]);
-		iPair b = coord_to_hex(possibleMoves[i][j]);
-		heyMove = "S "+myString(a.first)+" "+myString(a.second);
-		heyMove+= " M "+myString(b.first)+" "+myString(b.second);
-		playerMove+= " S "+myString(a.first)+" "+myString(a.second);
-		playerMove+=" M "+myString(b.first)+" "+myString(b.second);
-		opponent_player_Move(heyMove,1);
-	}
-	else{
-
-		//if 4 continuous markers
-		if(marker_4.size()){
-			for(int i = 0; i<ringPos.size();i++){
-				if(find(marker_4.begin(),marker_4.end(),ringPos[i])!=marker_4.end()){
-
-					//remove the possiblemove which flip your continuous markers
-					iPair rs = removeBadPossibleMove(ringPos[i], possibleMoves[i]);
-
-					int size = possibleMoves[i].size();
-					if(size == 0) continue;
-					int j = rand()%size;
-					iPair a = coord_to_hex(ringPos[i]);
-					iPair b = coord_to_hex(possibleMoves[i][j]);
-					playerMove = "S "+myString(a.first)+" "+myString(a.second);
-					playerMove+=" M "+myString(b.first)+" "+myString(b.second);
-
-					opponent_player_Move(playerMove,1);
-
-					iPair RS = coord_to_hex(rs);
-					iPair RE = a;
-
-					string heyMove = " RS " + myString(RS.first)+ " " + myString(RS.second)
-					              + " RE "+ myString(RE.first)+" "+myString(RE.second);
-					playerMove+= " RS " + myString(RS.first)+ " " + myString(RS.second)
-					              + " RE "+ myString(RE.first)+" "+myString(RE.second);
-				
-					//choose a random ring to remove
-					size = ringPos.size();
-					int pos = rand()%size;
-					iPair X = coord_to_hex(ringPos[pos]);
-
-					heyMove+= " X "+myString(X.first)+" "+myString(X.second);
-					playerMove+= " X "+myString(X.first)+" "+myString(X.second);
-					ringRemoved++;
-					if(ringRemoved == 3)
-						return;
-					opponent_player_Move(heyMove,1);
-					return;
-				}
-			}
-
-
-			//move a ring to neighbour
-
-			for(int i = 0; i<ringPos.size(); i++){
-					//checking if the ring can be moved adjacent to 4 continuous markers
-					for(int j = 0 ; j<possibleMoves[i].size(); j++){
-
-						if(find(marker_4.begin(),marker_4.end(),possibleMoves[i][j])!=marker_4.end()){
-							iPair a = coord_to_hex(ringPos[i]);
-							iPair b = coord_to_hex(possibleMoves[i][j]);
-							playerMove = "S "+myString(a.first)+" "+myString(a.second);
-							playerMove+=" M "+myString(b.first)+" "+myString(b.second);
-
-
-							//check for 5 continuous
-
-
-							opponent_player_Move(playerMove,1);
-
-							findContinuousMarkers(markerPos,myMarker);
-							////cout<< playerMove<<endl;
-							string heyMove;
-							if(marker_5.size()){
-								//selecting random 5 continuous markers --> to be changed after heuristic evaluation
-								srand(rand()^time(0));
-								int size = marker_5.size();
-								int index = rand()%size;
-
-								//getting start and end positions for markers to be removed.
-								iPair RS = coord_to_hex(marker_5[index].first);
-								iPair RE = coord_to_hex(marker_5[index].second);
-								heyMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
-								playerMove+= " RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
-								//selecting any random ring which has to be removed --> to be changed after heuristic
-								size = ringPos.size();
-								index = rand()%size;
-								iPair X = coord_to_hex(ringPos[index]);
-								heyMove+=" X "+myString(X.first)+" "+myString(X.second);
-								playerMove+= " X "+myString(X.first)+" "+myString(X.second);
-								ringRemoved++;
-								if(ringRemoved == 3) return;
-								opponent_player_Move(heyMove,1);
-							}
-
-							return;
-						}
-					}
-			}
-		}
-
-		//again set the possible moves
-		possibleMoves.clear();
-		for(int i=0;i<ringPos.size();i++){
-			possibleMovements(ringPos[i]);
-		}
-
-
-		srand(rand()^time(0));
-		int size = ringPos.size();
-
-		/*//selecting random ring and random move
-		int i,j;
-		do{
-			i = rand()%size;
-		}while(!possibleMoves[i].size());
-		j = rand()%possibleMoves[i].size();
-		//cout<<"here"<<endl;*/
-
-		int i,j;
-		iPair weightLoc;
-		int maxWeight = -1;
-		for(int k=0;k<ringPos.size();k++){
-			weightLoc = getMaxWeightedMoveofRing(ringPos[k],k);
-			if(weightLoc.first > maxWeight){
-				i = k;
-				j = weightLoc.second;
-				maxWeight = weightLoc.first;
-			}
-
-		}
-
-
-		iPair a = coord_to_hex(ringPos[i]);
-		iPair b = coord_to_hex(possibleMoves[i][j]);
-		playerMove = "S "+myString(a.first)+" "+myString(a.second);
-		playerMove+=" M "+myString(b.first)+" "+myString(b.second);
-		opponent_player_Move(playerMove,1);
-
+	while(true){
 		findContinuousMarkers(markerPos,myMarker);
-		////cout<< playerMove<<endl;
-		string heyMove;
+
 		if(marker_5.size()){
-			//selecting random 5 continuous markers --> to be changed after heuristic evaluation
+		//selecting random 5 continuous markers --> to be changed after heuristic evaluation
+
 			srand(rand()^time(0));
 			int size = marker_5.size();
 			int index = rand()%size;
@@ -677,34 +497,29 @@ void Board:: myMove(){
 			iPair RS = coord_to_hex(marker_5[index].first);
 			iPair RE = coord_to_hex(marker_5[index].second);
 			heyMove = "RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
-			playerMove+= " RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
+			playerMove += " RS " + myString(RS.first)+ " " + myString(RS.second) + " RE "+ myString(RE.first)+" "+myString(RE.second);
+
 			//selecting any random ring which has to be removed --> to be changed after heuristic
 			size = ringPos.size();
 			index = rand()%size;
 			iPair X = coord_to_hex(ringPos[index]);
-			heyMove+=" X "+myString(X.first)+" "+myString(X.second);
+			heyMove += " X "+myString(X.first)+" "+myString(X.second);
 			playerMove+= " X "+myString(X.first)+" "+myString(X.second);
 			ringRemoved++;
-			if(ringRemoved == 3) return;
+
 			opponent_player_Move(heyMove,1);
 		}
+		else break;
 	}
 
-    // possible moves
-	/*for(i=0;i<5;i++){
-		//cout<<"[";
-		printPair(ringPos[i]);
-		//cout<<": ";
-		for(int j=0;j<possibleMoves[i].size();j++){
-			//cout<<" ";
-			printPair(possibleMoves[i][j]);
-		}
-		//cout<<"]"<<endl;
-	}*/
 }
+void Board::updatePossibleMovementsofRings(){
+	//all possible movements of rings
+	possibleMoves.clear();
+	for(int i=0;i<ringPos.size();i++){
+		possibleMovements(ringPos[i]);
+	}
 
-void Board:: printPair(iPair pair){
-	//cout<<"("<<pair.first-5<<","<<pair.second-5<<")";
 }
 
 void Board::initialMove(){
@@ -720,11 +535,122 @@ void Board::initialMove(){
 			p= rand()%(6*h);
 		index = hex_to_coord(make_pair(h,p));
 	}while(myBoard[index.first][index.second]!=0);
-	//cout<<"P "<<x<<" "<<y<<endl;
+	
 	iPair hex = coord_to_hex(index);
 	playerMove = "P "+myString(hex.first)+" "+myString(hex.second);
-	//myBoard[x][y]=myRing;
-	//ringPos.push_back(make_pair(x,y));
+	
+}
+
+void Board:: myMove(){
+
+	playerMove = "";
+	string heyMove;
+	//initial 5 moves
+	if(initial_counter<5){
+		initialMove();
+		initial_counter++;
+		opponent_player_Move(playerMove,1);
+		return;
+	}
+
+	//check if there exists multiple 5 continuous markers
+	removeAll5ContinuousMarkers();
+	if(ringRemoved>=3){
+		//trim playerMove
+		playerMove.erase(0, playerMove.find_first_not_of(" "));
+		return;
+	}
+
+	updatePossibleMovementsofRings();
+
+	//if 4 continuous markers
+	if(marker_4.size()){
+		for(int i = 0; i<ringPos.size();i++){
+			if(find(marker_4.begin(),marker_4.end(),ringPos[i])!=marker_4.end()){
+
+				//remove the possiblemove which flip your continuous markers
+				iPair rs = removeBadPossibleMove(ringPos[i], possibleMoves[i]);
+
+				int size = possibleMoves[i].size();
+				if(size == 0) continue;
+				int j = rand()%size;
+				iPair a = coord_to_hex(ringPos[i]);
+				iPair b = coord_to_hex(possibleMoves[i][j]);
+				heyMove = "S "+myString(a.first)+" "+myString(a.second);
+				heyMove +=" M "+myString(b.first)+" "+myString(b.second);
+				playerMove += " S "+myString(a.first)+" "+myString(a.second);
+				playerMove+=" M "+myString(b.first)+" "+myString(b.second);
+
+				opponent_player_Move(heyMove,1);
+
+				removeAll5ContinuousMarkers();
+				//trim playerMove
+				playerMove.erase(0, playerMove.find_first_not_of(" "));
+				return;
+			}
+		}
+
+
+		//move a ring to neighbour
+
+		for(int i = 0; i<ringPos.size(); i++){
+			//checking if the ring can be moved adjacent to 4 continuous markers
+			for(int j = 0 ; j<possibleMoves[i].size(); j++){
+
+				if(find(marker_4.begin(),marker_4.end(),possibleMoves[i][j])!=marker_4.end()){
+					iPair a = coord_to_hex(ringPos[i]);
+					iPair b = coord_to_hex(possibleMoves[i][j]);
+					heyMove = "S "+myString(a.first)+" "+myString(a.second);
+					heyMove +=" M "+myString(b.first)+" "+myString(b.second);
+					playerMove += " S "+myString(a.first)+" "+myString(a.second);
+					playerMove+=" M "+myString(b.first)+" "+myString(b.second);
+
+					opponent_player_Move(heyMove,1);
+					
+					//check for 5 continuous
+
+					removeAll5ContinuousMarkers();
+					//trim playerMove
+					playerMove.erase(0, playerMove.find_first_not_of(" "));
+					return;
+				}
+			}
+		}	
+	}
+		
+	//again set the possible moves
+	updatePossibleMovementsofRings();
+
+	int i,j;
+	iPair weightLoc;
+	int maxWeight = INT_MIN;
+	for(int k=0;k<ringPos.size();k++){
+		weightLoc = getMaxWeightedMoveofRing(ringPos[k],k);
+		if(weightLoc.first > maxWeight){
+			i = k;
+			j = weightLoc.second;
+			maxWeight = weightLoc.first;
+		}
+	}
+
+
+	iPair a = coord_to_hex(ringPos[i]);
+	iPair b = coord_to_hex(possibleMoves[i][j]);
+
+	heyMove = "S "+myString(a.first)+" "+myString(a.second);
+	heyMove += " M "+myString(b.first)+" "+myString(b.second);
+	playerMove += " S "+myString(a.first)+" "+myString(a.second);
+	playerMove +=" M "+myString(b.first)+" "+myString(b.second);
+	opponent_player_Move(heyMove,1);
+
+	removeAll5ContinuousMarkers();
+
+	//trim playerMove
+	playerMove.erase(0, playerMove.find_first_not_of(" "));
+}
+
+void printPair(iPair pair){
+	//cout<<"("<<pair.first-5<<","<<pair.second-5<<")";
 }
 
 void Board :: possibleMovements(iPair ring){
@@ -862,6 +788,7 @@ void Board :: possibleMovements(iPair ring){
 	possibleMoves.push_back(possibleMove);
 
 }
+//Helper function
 void reset(bool* flag, int n){
 	for(int i=0;i<n;i++){
 		flag[i]=true;
@@ -994,35 +921,30 @@ void Board:: findContinuousMarkers(vector<iPair> &marker, int markerValue){
 			flag[i]= false;
 		}
 	}
-
 }
 
 
-int Board::getCount(int board[11][11]){
-	int count =0;
+int Board::getWeight1(int board[11][11]){
+	int countMarker =0;
+	
 	for(int i=0;i<11;i++){
 		for(int j=0;j<11;j++){
 			if(board[i][j]==myMarker)
-				count++;
+				countMarker++;
 		}
 	}
-
-	return count;
+	return countMarker;
 }
 
 void Board::update_board(int board[11][11],string s){
 	iPair temp,index;
 
 	vector<string> move;
-	char* token = strtok((char*)s.c_str()," ");
-	while(token!=NULL){
-		string tok(token);
-		move.push_back(tok);
-		token = strtok(NULL," ");
-	}
+	move = tokenize(s," ");
 	
-
+	//S h p
 	temp = hex_to_coord( make_pair(myInt(move[1]),myInt(move[2])));
+	//M h p
 	index = hex_to_coord( make_pair(myInt(move[4]),myInt(move[5])));
 
 	//vertical move
@@ -1087,13 +1009,13 @@ iPair Board::getMaxWeightedMoveofRing(iPair ring,int i){
 	int j,p,q;
 	
 	int board[11][11];
-	int maxCount = getCount(myBoard),count;
-	string move;
+	int maxWeight = INT_MIN,weight;
+	
 	iPair a = coord_to_hex(ring) , b ,res;
 	res.second = 0;
 	for(j=0;j<possibleMoves[i].size();j++){
+		
 		//copying board
-
 		for(p=0;p<11;p++){
 			for(q=0;q<11;q++){
 				board[p][q] = myBoard[p][q];
@@ -1101,17 +1023,16 @@ iPair Board::getMaxWeightedMoveofRing(iPair ring,int i){
 		}
 
 		b = coord_to_hex(possibleMoves[i][j]);
-		move = "S "+myString(a.first)+" "+myString(a.second);
-		move+=" M "+myString(b.first)+" "+myString(b.second);
+		string move = "S "+myString(a.first)+" "+myString(a.second);
+		move +=" M "+myString(b.first)+" "+myString(b.second);
 		update_board(board,move);
 
-		count = getCount(board); 
-		if(count > maxCount){
-			maxCount = count;
+		weight = getWeight1(board); 
+		if(weight > maxWeight){
+			maxWeight = weight;
 			res.second = j;
 		}
 	}
-	res.first = maxCount;
+	res.first = maxWeight;
 	return res;
-
 }

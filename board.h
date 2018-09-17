@@ -15,9 +15,9 @@ class Board{
 	vector<iPair > ringPos;
 	vector<iPair > ringPosOpp;
 	vector<vector<iPair> > possibleMoves;
-	double cost[5];
 	int myBoard[11][11];
 	int ringRemoved;
+
 	Board();
 	iPair hex_to_coord(iPair hex);
 	iPair coord_to_hex(iPair coord);
@@ -27,17 +27,17 @@ class Board{
 	void removeMarker(vector<iPair> &vec, iPair index);
 	void moveRing(vector<iPair> &vec, iPair temp, iPair index);
 	void movement(string s, iPair temp, iPair index,int marker);
-	iPair coord_to_index(iPair coord);
-	iPair index_to_coord(iPair index);
 	void myMove();
-	void printPair(iPair);
 	void initialMove();
 	void possibleMovements(iPair);
 	void findContinuousMarkers(vector<iPair> &marker, int markerValue);
 	iPair removeBadPossibleMove(iPair ring, vector<iPair> &possibleMove);
-	int getCount(int myBoard[11][11]);
+	int getWeight1(int myBoard[11][11]);
+	int getWeight2(int myBoard[11][11]);
 	iPair getMaxWeightedMoveofRing(iPair ring,int);
-	void update_board(int board[11][11],string move);
+	void update_board(int board[11][11],string);
+	void removeAll5ContinuousMarkers();
+	void updatePossibleMovementsofRings();
 };
 
 #endif /* BOARD_H_ */
