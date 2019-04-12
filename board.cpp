@@ -51,7 +51,7 @@ vector<string> tokenize(string s, const char* delimiter){
 //class functions
 
 Board::Board(){
-	
+
 	int i,j,k;
 	ringRemoved = 0;
 
@@ -340,10 +340,10 @@ void Board :: newOpp_player_Move(string move, int h, int p, int flag){
 		}
 	}
 }
- 
+
 void Board :: opponent_player_Move(string s,int flag){
 	vector<string> move;
-	
+
 	move = tokenize(s," ");
 	int n = move.size();
 	string h,p;
@@ -535,10 +535,10 @@ void Board::initialMove(){
 			p= rand()%(6*h);
 		index = hex_to_coord(make_pair(h,p));
 	}while(myBoard[index.first][index.second]!=0);
-	
+
 	iPair hex = coord_to_hex(index);
 	playerMove = "P "+myString(hex.first)+" "+myString(hex.second);
-	
+
 }
 
 iPair Board:: getEpicMove(iPair ring){
@@ -680,7 +680,7 @@ void Board:: myMove(){
 	}
 
 	//Priority2. flip if opponent has 4 continuous markers
-	
+
 	findContinuousMarkers(markerPosOpp,oppMarker);
 	if(marker_4.size()){
 		for(int i = 0; i<ringPos.size();i++){
@@ -755,7 +755,7 @@ void Board:: myMove(){
 					playerMove+=" M "+myString(b.first)+" "+myString(b.second);
 
 					opponent_player_Move(heyMove,1);
-					
+
 					//check for 5 continuous
 
 					removeAll5ContinuousMarkers();
@@ -764,9 +764,9 @@ void Board:: myMove(){
 					return;
 				}
 			}
-		}	
+		}
 	}
-		
+
 	//again set the possible moves
 	updatePossibleMovementsofRings();
 
@@ -1076,7 +1076,7 @@ void Board:: findContinuousMarkers(vector<iPair> &marker, int markerValue){
 
 int Board::getWeight1(int board[11][11]){
 	int countMarker =0;
-	
+
 	for(int i=0;i<11;i++){
 		for(int j=0;j<11;j++){
 			if(board[i][j]==myMarker)
@@ -1091,7 +1091,7 @@ void Board::update_board(int board[11][11],string s){
 
 	vector<string> move;
 	move = tokenize(s," ");
-	
+
 	//S h p
 	temp = hex_to_coord( make_pair(myInt(move[1]),myInt(move[2])));
 	//M h p
@@ -1102,7 +1102,7 @@ void Board::update_board(int board[11][11],string s){
 		if(temp.second>index.second){
 			for(int i = temp.second-1; i>index.second; i--){
 				if(board[temp.first][i]>0){
-					board[temp.first][i] = oppMarker+myMarker-board[temp.first][i];	
+					board[temp.first][i] = oppMarker+myMarker-board[temp.first][i];
 				}
 			}
 		}
@@ -1146,10 +1146,10 @@ void Board::update_board(int board[11][11],string s){
 		else if(temp.first>index.first && temp.second>index.second){
 			for(int i = 1; i<diff; i++){
 				if(board[temp.first-i][temp.second-i]>0){
-					
+
 					board[temp.first-i][temp.second-i] = oppMarker+myMarker-board[temp.first-i][temp.second-i];
 				}
-					
+
 			}
 		}
 	}
@@ -1157,14 +1157,15 @@ void Board::update_board(int board[11][11],string s){
 
 iPair Board::getMaxWeightedMoveofRing(iPair ring,int i){
 	int j,p,q;
-	
+
 	int board[11][11];
 	int maxWeight = INT_MIN,weight;
-	
+	int maxWeight2 = INT_MIN, weight2;
+
 	iPair a = coord_to_hex(ring) , b ,res;
 	res.second = 0;
 	for(j=0;j<possibleMoves[i].size();j++){
-		
+
 		//copying board
 		for(p=0;p<11;p++){
 			for(q=0;q<11;q++){
@@ -1177,12 +1178,156 @@ iPair Board::getMaxWeightedMoveofRing(iPair ring,int i){
 		move +=" M "+myString(b.first)+" "+myString(b.second);
 		update_board(board,move);
 
-		weight = getWeight1(board); 
+		weight = getWeight1(board);
+		weight2 = getWeight2(board);
 		if(weight > maxWeight){
 			maxWeight = weight;
+			maxWeight2 = weight2;
+			res.second = j;
+		}
+		else if(weight == maxWeight && weight2 > maxWeight2){
+			maxWeight = weight;
+			maxWeight2 = weight2;
 			res.second = j;
 		}
 	}
 	res.first = maxWeight;
 	return res;
+}
+
+//Helper Function
+void checkDiag(int myBoard[11][11], int i , int j , int &count , int &count_opp , int &cont_2_diag , int &cont_2_diag_opp , int &cont_3_diag , int &cont_3_diag_opp , int &cont_4_diag , int &cont_4_diag_opp){
+	for(int a = i, b = j; a<11&&b<11 ; a++,b++){
+		if((a-1)>=0&& (b-1)>=0&&myBoard[a][b] == myBoard[a-1][b-1]){
+			if(myBoard[a][b] == oppRing || myBoard[a][b] == oppMarker){
+				count_opp++;
+			}
+			else if(myBoard[a][b] == myRing || myBoard[a][b] == myMarker){
+				count++;
+			}
+		}
+		if(((a-1)>=0&&(b-1)>0&&myBoard[i][j] != myBoard[a-1][b-1])||(a==10) || (b == 1) || (myBoard[i][j]<=0)){
+			if(count>=4){
+				cont_4_diag++;
+			}
+			if(count>2&&count<4){
+				cont_3_diag++;
+			}
+			if(count>1&&count<3){
+				cont_2_diag++;
+			}
+			if(count_opp>=4){
+				cont_4_diag_opp++;
+			}
+			if(count_opp>2&&count_opp<4){
+				cont_3_diag_opp++;
+			}
+			if(count_opp>1&&count_opp<3){
+				cont_2_diag_opp++;
+			}
+			count = 1;
+			count_opp = 1;
+		}
+	}
+}
+
+int Board :: getWeight2(int myBoard[11][11]){
+	int cont_4_hor = 0, cont_4_ver = 0, cont_4_diag = 0;
+	int cont_3_hor = 0, cont_3_ver = 0, cont_3_diag = 0;
+	int cont_2_hor = 0, cont_2_ver = 0, cont_2_diag = 0;
+	int cont_4_hor_opp = 0, cont_4_ver_opp = 0, cont_4_diag_opp = 0;
+	int cont_3_hor_opp = 0, cont_3_ver_opp = 0, cont_3_diag_opp = 0;
+	int cont_2_hor_opp = 0, cont_2_ver_opp = 0, cont_2_diag_opp = 0;
+	int count,count_opp;
+
+	//count continuous 2,3,4 in horizontal direction.
+	for(int i = 0; i<11; i++){
+		count = 1,count_opp=1;
+		for(int j = 0 ; j<11; j++){
+			if((j-1)>=0&&myBoard[i][j] == myBoard[i][j-1]){
+				if(myBoard[i][j] == oppRing || myBoard[i][j] == oppMarker){
+					count_opp++;
+				}
+				else if(myBoard[i][j] == myRing || myBoard[i][j] == myMarker){
+					count++;
+				}
+			}
+			if(((j-1)>=0&&myBoard[i][j] != myBoard[i][j-1])||(j==10)|| (myBoard[i][j]<=0)){
+				if(count>=4){
+					cont_4_hor++;
+				}
+				if(count>2&&count<4){
+					cont_3_hor++;
+				}
+				if(count>1&&count<3){
+					cont_2_hor++;
+				}
+				if(count_opp>=4){
+					cont_4_hor_opp++;
+				}
+				if(count_opp>2&&count_opp<4){
+					cont_3_hor_opp++;
+				}
+				if(count_opp>1&&count_opp<3){
+					cont_2_hor_opp++;
+				}
+				count = 1;
+				count_opp = 1;
+			}
+		}
+	}
+
+	//count continuous 2,3,4 in vertical direction.
+	for(int i = 0; i<11; i++){
+		count = 1,count_opp=1;
+		for(int j = 0 ; j<11; j++){
+			if((j-1)>=0&&myBoard[j][i] == myBoard[j-1][i]){
+				if(myBoard[j][i] == oppRing || myBoard[j][i] == oppMarker){
+					count_opp++;
+				}
+				else if(myBoard[j][i] == myRing || myBoard[j][i] == myMarker){
+					count++;
+				}
+			}
+			if(((j-1)>=0&&myBoard[j][i] != myBoard[j-1][i])||(j==10)|| (myBoard[i][j]<=0)){
+				if(count>=4){
+					cont_4_ver++;
+				}
+				if(count>2&&count<4){
+					cont_3_ver++;
+				}
+				if(count>1&&count<3){
+					cont_2_ver++;
+				}
+				if(count_opp>=4){
+					cont_4_ver_opp++;
+				}
+				if(count_opp>2&&count_opp<4){
+					cont_3_ver_opp++;
+				}
+				if(count_opp>1&&count_opp<3){
+					cont_2_ver_opp++;
+				}
+				count = 1;
+				count_opp = 1;
+			}
+		}
+	}
+
+	//count continuous 2,3,4 in lower diagonal  direction.
+	for(int i = 0; i<11; i++){
+		count = 1,count_opp=1;
+		checkDiag(myBoard,i , 0 , count , count_opp , cont_2_diag , cont_2_diag_opp , cont_3_diag , cont_3_diag_opp , cont_4_diag , cont_4_diag_opp);
+	}
+
+	//count continuos 2,3,4 in upper diagonal direction.
+	for(int i = 0; i<11; i++){
+		count = 1,count_opp=1;
+		checkDiag(myBoard,0 , i , count , count_opp , cont_2_diag , cont_2_diag_opp , cont_3_diag , cont_3_diag_opp , cont_4_diag , cont_4_diag_opp);
+	}
+	/*cout << cont_2_hor<<" "<<cont_2_ver<<" "<<cont_2_diag<<" "<<cont_3_hor<<" "<<cont_3_ver<<" "<<cont_3_diag<<" "<<cont_4_hor<<" "<<cont_4_ver<<" "<<cont_4_diag<<endl;
+	cout << cont_2_hor_opp<<" "<<cont_2_ver_opp<<" "<<cont_2_diag_opp<<" "<<cont_3_hor_opp<<" "<<cont_3_ver_opp<<" "<<cont_3_diag_opp<<" "<<cont_4_hor_opp<<" "<<cont_4_ver_opp<<" "<<cont_4_diag_opp<<endl;*/
+	int cont =  10*(cont_4_diag+cont_4_ver+cont_4_hor) + 5*(cont_3_diag+cont_3_hor+cont_3_ver) + 2*(cont_2_diag+cont_2_ver+cont_2_diag);
+	int cont_opp = 1*(cont_4_diag_opp+cont_4_ver_opp+cont_4_hor_opp) + 2*(cont_3_diag_opp+cont_3_hor_opp+cont_3_ver_opp) + 3*(cont_2_diag_opp+cont_2_ver_opp+cont_2_diag_opp);
+	return cont;//+cont_opp;
 }
